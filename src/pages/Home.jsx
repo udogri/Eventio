@@ -8,7 +8,7 @@ export default function Home() {
     <Container maxW="container.md">
       <VStack spacing={8} py={20} textAlign="center">
         <Heading fontSize={{ base: "2xl", md: "4xl" }}>
-          Venue Booking System
+          Eventio
         </Heading>
 
         <Text fontSize={{ base: "md", md: "lg" }} color="gray.600">

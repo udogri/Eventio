@@ -45,7 +45,7 @@ import {
         >
           {/* LOGO */}
           <Text fontWeight="bold" fontSize="lg">
-            VenueBook
+            Eventio
           </Text>
   
           {/* Desktop Menu */}
