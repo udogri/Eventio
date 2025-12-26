@@ -1,173 +1,241 @@
 import {
-    Box,
-    Heading,
-    Text,
-    Image,
-    Button,
-    VStack,
-    Spinner,
-    HStack,
-    Center,
-    Tag,
-    IconButton,
-  } from "@chakra-ui/react";
-  import { useParams } from "react-router-dom";
-  import { db } from "../firebase/firebaseConfig";
-  import { doc, getDoc } from "firebase/firestore";
-  import { useEffect, useState } from "react";
-  import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-  import Layout from "../components/dashboardLayout/Index";
-  
-  export default function VenueDetails() {
-    const { id } = useParams();
-    const [venue, setVenue] = useState(null);
-    const [loading, setLoading] = useState(true);
-  
-    // Carousel
-    const [currentImage, setCurrentImage] = useState(0);
-  
-    const nextImage = () => {
-      setCurrentImage((prev) =>
-        prev === venue.images.length - 1 ? 0 : prev + 1
-      );
-    };
-  
-    const prevImage = () => {
-      setCurrentImage((prev) =>
-        prev === 0 ? venue.images.length - 1 : prev - 1
-      );
-    };
-  
-    useEffect(() => {
-      const fetchVenue = async () => {
-        try {
-          const docRef = doc(db, "venues", id);
-          const snapshot = await getDoc(docRef);
-  
-          if (snapshot.exists()) {
-            setVenue(snapshot.data());
-          } else {
-            setVenue("not_found");
-          }
-        } catch (error) {
-          console.error("Error fetching venue:", error);
-          setVenue("error");
-        } finally {
-          setLoading(false);
+  Box,
+  Heading,
+  Text,
+  Image,
+  Button,
+  VStack,
+  Spinner,
+  HStack,
+  Center,
+  Tag,
+  IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { useParams } from "react-router-dom";
+import { db } from "../firebase/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { FaWhatsapp, FaInstagram, FaGlobe } from "react-icons/fa";
+import Layout from "../components/dashboardLayout/Index";
+
+export default function VenueDetails() {
+  const { id } = useParams();
+  const [venue, setVenue] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentImage, setCurrentImage] = useState(0);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const nextImage = () => {
+    setCurrentImage((prev) =>
+      prev === venue.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImage((prev) =>
+      prev === 0 ? venue.images.length - 1 : prev - 1
+    );
+  };
+
+  useEffect(() => {
+    const fetchVenue = async () => {
+      try {
+        const docRef = doc(db, "venues", id);
+        const snapshot = await getDoc(docRef);
+
+        if (snapshot.exists()) {
+          setVenue(snapshot.data());
+        } else {
+          setVenue("not_found");
         }
-      };
-  
-      fetchVenue();
-    }, [id]);
-  
-    if (loading) {
-      return (
-        <Center h="60vh">
-          <Spinner size="xl" />
-        </Center>
-      );
-    }
-  
-    if (venue === "not_found" || venue === "error") {
-      return (
-        <Center h="60vh" flexDir="column" gap={3}>
-          <Heading size="md">Venue Not Found</Heading>
-          <Text color="gray.500">This venue may have been removed.</Text>
-        </Center>
-      );
-    }
-  
+      } catch (error) {
+        console.error("Error fetching venue:", error);
+        setVenue("error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVenue();
+  }, [id]);
+
+  if (loading) {
     return (
-      <Layout>
-        <Box maxW="900px" mx="auto" p={6}>
-  
-          {/* IMAGE CAROUSEL */}
-          <Box
-            position="relative"
+      <Center h="60vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  if (venue === "not_found" || venue === "error") {
+    return (
+      <Center h="60vh" flexDir="column" gap={3}>
+        <Heading size="md">Venue Not Found</Heading>
+        <Text color="gray.500">This venue may have been removed.</Text>
+      </Center>
+    );
+  }
+
+  return (
+    <Layout>
+      <Box maxW="900px" mx="auto" p={6}>
+
+        {/* IMAGE CAROUSEL */}
+        <Box
+          position="relative"
+          w="100%"
+          h="350px"
+          mb={6}
+          overflow="hidden"
+          borderRadius="lg"
+        >
+          <Image
+            src={venue.images[currentImage]}
+            alt={venue.name}
             w="100%"
-            h="350px"
-            mb={6}
-            overflow="hidden"
-            borderRadius="lg"
-          >
-            <Image
-              src={venue.images[currentImage]}
-              alt={venue.name}
-              w="100%"
-              h="100%"
-              objectFit="cover"
-              borderRadius="lg"
-              transition="0.3s ease"
-            />
-  
-            {/* Prev Button */}
-            <IconButton
-              icon={<ChevronLeftIcon />}
-              position="absolute"
-              top="50%"
-              left="10px"
-              transform="translateY(-50%)"
-              onClick={prevImage}
-              colorScheme="blackAlpha"
-              rounded="full"
-              size="lg"
-            />
-  
-            {/* Next Button */}
-            <IconButton
-              icon={<ChevronRightIcon />}
-              position="absolute"
-              top="50%"
-              right="10px"
-              transform="translateY(-50%)"
-              onClick={nextImage}
-              colorScheme="blackAlpha"
-              rounded="full"
-              size="lg"
-            />
-          </Box>
-  
-          {/* DETAILS */}
-          <Heading mb={2}>{venue.name}</Heading>
-  
-          <HStack spacing={3} mb={3}>
-            <Tag colorScheme="blue" px={3} py={1}>
+            h="100%"
+            objectFit="cover"
+          />
+
+          <IconButton
+            icon={<ChevronLeftIcon />}
+            position="absolute"
+            top="50%"
+            left="10px"
+            transform="translateY(-50%)"
+            onClick={prevImage}
+            rounded="full"
+            colorScheme="blackAlpha"
+          />
+
+          <IconButton
+            icon={<ChevronRightIcon />}
+            position="absolute"
+            top="50%"
+            right="10px"
+            transform="translateY(-50%)"
+            onClick={nextImage}
+            rounded="full"
+            colorScheme="blackAlpha"
+          />
+        </Box>
+
+        {/* DETAILS */}
+        <Heading mb={2}>{venue.name}</Heading>
+
+        <HStack spacing={3} mb={4}>
+          <Tag colorScheme="blue">{venue.location}</Tag>
+          {venue.capacity && (
+            <Tag colorScheme="purple">
               Capacity: {venue.capacity}
             </Tag>
-            <Tag colorScheme="green" px={3} py={1}>
-              ₦{venue.price.toLocaleString()}
-            </Tag>
-          </HStack>
-  
-          <Text mb={6} color="gray.700" lineHeight="1.7">
-            {venue.description}
-          </Text>
-  
-          {/* AMENITIES */}
-          <HStack spacing={3} wrap="wrap" mb={6}>
-            {venue.amenities?.map((amenity, i) => (
+          )}
+          {venue.venueType && (
+            <Tag colorScheme="orange">{venue.venueType}</Tag>
+          )}
+        </HStack>
+
+        <Text mb={6} color="gray.700" lineHeight="1.7">
+          {venue.description}
+        </Text>
+
+        {/* AMENITIES */}
+        {venue.amenities?.length > 0 && (
+          <HStack spacing={2} wrap="wrap" mb={6}>
+            {venue.amenities.map((item, i) => (
               <Tag key={i} colorScheme="blue">
-                {amenity}
+                {item}
               </Tag>
             ))}
           </HStack>
-  
-          {/* CONTACT BUTTON (WhatsApp Example) */}
-          <Button
-            colorScheme="green"
-            w="full"
-            size="lg"
-            onClick={() =>
-              window.open(
-                `https://wa.me/2348012345678?text=Hello, I'm interested in booking the venue: ${venue.name}`,
-                "_blank"
-              )
-            }
-          >
-            Contact
-          </Button>
-        </Box>
-      </Layout>
-    );
-  }
-  
+        )}
+
+        {/* CONTACT BUTTON */}
+        <Button
+          colorScheme="green"
+          size="lg"
+          w="full"
+          onClick={onOpen}
+        >
+          Contact Venue
+        </Button>
+
+        {/* CONTACT MODAL */}
+        <Modal isOpen={isOpen} onClose={onClose} isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Contact Venue</ModalHeader>
+            <ModalCloseButton />
+
+            <ModalBody pb={6}>
+              <VStack spacing={4}>
+
+                {venue.contact?.whatsapp && (
+                  <Button
+                    leftIcon={<FaWhatsapp />}
+                    colorScheme="green"
+                    w="full"
+                    onClick={() =>
+                      window.open(
+                        venue.contact.whatsapp.startsWith("http")
+                          ? venue.contact.whatsapp
+                          : `https://wa.me/${venue.contact.whatsapp.replace(/\D/g, "")}?text=Hello, I'm interested in ${venue.name}`,
+                        "_blank"
+                      )
+                    }
+                  >
+                    WhatsApp
+                  </Button>
+                )}
+
+                {venue.contact?.instagram && (
+                  <Button
+                    leftIcon={<FaInstagram />}
+                    colorScheme="pink"
+                    w="full"
+                    onClick={() =>
+                      window.open(venue.contact.instagram, "_blank")
+                    }
+                  >
+                    Instagram
+                  </Button>
+                )}
+
+                {venue.contact?.website && (
+                  <Button
+                    leftIcon={<FaGlobe />}
+                    colorScheme="blue"
+                    w="full"
+                    onClick={() =>
+                      window.open(venue.contact.website, "_blank")
+                    }
+                  >
+                    Website
+                  </Button>
+                )}
+
+                {!venue.contact?.whatsapp &&
+                  !venue.contact?.instagram &&
+                  !venue.contact?.website && (
+                    <Text color="gray.500" textAlign="center">
+                      No contact information available.
+                    </Text>
+                  )}
+              </VStack>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+
+      </Box>
+    </Layout>
+  );
+}

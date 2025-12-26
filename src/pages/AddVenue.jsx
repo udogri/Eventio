@@ -29,6 +29,11 @@ export default function AddVenue() {
     capacity: "",
     price: "",
     description: "",
+    contact: {
+      instagram: "",
+      whatsapp: "",
+      website: "",
+    },
   });
 
   const [images, setImages] = useState([]);
@@ -39,9 +44,22 @@ export default function AddVenue() {
 
   const toast = useToast();
 
-  // Handle text inputs
+  // Handle text inputs (supports nested contact fields)
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name.startsWith("contact.")) {
+      const field = name.split(".")[1];
+      setForm({
+        ...form,
+        contact: {
+          ...form.contact,
+          [field]: value,
+        },
+      });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   // Add Amenity
@@ -69,30 +87,25 @@ export default function AddVenue() {
         const url = await uploadToImgBB(file);
         if (url) uploadedUrls.push(url);
       } catch (err) {
-        console.error("Error uploading image:", err);
         toast({
           title: "Image upload failed",
-          description: err.message || "One or more images failed to upload.",
           status: "error",
         });
       }
     }
 
     setImages((prev) => [...prev, ...uploadedUrls]);
-    if (uploadedUrls.length > 0)
-      toast({ title: "Images uploaded!", status: "success" });
-
     setUploading(false);
   };
 
-  // Form Submission
+  // Submit Form
   const handleSubmit = async () => {
     const { name, location, price } = form;
 
     if (!name || !location || !price || images.length === 0) {
       toast({
         title: "Missing fields",
-        description: "Please fill all required fields and upload at least one image.",
+        description: "Fill required fields and upload at least one image.",
         status: "error",
       });
       return;
@@ -101,8 +114,6 @@ export default function AddVenue() {
     setSaving(true);
 
     try {
-      console.log("Submitting venue with data:", { ...form, images, amenities });
-
       await addDoc(collection(db, "venues"), {
         ...form,
         capacity: Number(form.capacity) || 0,
@@ -114,23 +125,26 @@ export default function AddVenue() {
 
       toast({ title: "Venue added!", status: "success" });
 
-      // Reset form
+      // Reset
       setForm({
         name: "",
         location: "",
         capacity: "",
         price: "",
         description: "",
+        contact: {
+          instagram: "",
+          whatsapp: "",
+          website: "",
+        },
       });
       setImages([]);
       setAmenities([]);
       setAmenityInput("");
 
     } catch (err) {
-      console.error("Error adding venue:", err);
       toast({
         title: "Error adding venue",
-        description: err.message || "Something went wrong.",
         status: "error",
       });
     }
@@ -140,67 +154,59 @@ export default function AddVenue() {
 
   return (
     <Layout>
-      <Box maxW="700px" mx="auto" px={[4, 0]} py={6}>
+      <Box maxW="700px" mx="auto" py={6}>
         <Heading mb={6}>Add New Venue</Heading>
 
-        <VStack spacing={5} w="100%" align="stretch">
+        <VStack spacing={5} align="stretch">
 
-          {/* Venue Name */}
           <FormControl isRequired>
             <FormLabel>Venue Name</FormLabel>
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="e.g. Royal Banquet Hall"
-            />
+            <Input name="name" value={form.name} onChange={handleChange} />
           </FormControl>
 
-          {/* Location */}
           <FormControl isRequired>
-            <FormLabel>Location</FormLabel>
-            <Input
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              placeholder="e.g. Lekki Phase 1, Lagos"
-            />
+            <FormLabel>Location (City + Area)</FormLabel>
+            <Input name="location" value={form.location} onChange={handleChange} />
           </FormControl>
 
-          {/* Capacity */}
           <FormControl>
             <FormLabel>Capacity</FormLabel>
-            <Input
-              name="capacity"
-              type="number"
-              value={form.capacity}
-              onChange={handleChange}
-              placeholder="e.g. 300"
-            />
+            <Input name="capacity" type="number" value={form.capacity} onChange={handleChange} />
           </FormControl>
 
-          {/* Price */}
           <FormControl isRequired>
             <FormLabel>Price</FormLabel>
-            <Input
-              name="price"
-              type="number"
-              value={form.price}
-              onChange={handleChange}
-              placeholder="e.g. 150000"
-            />
+            <Input name="price" type="number" value={form.price} onChange={handleChange} />
           </FormControl>
 
-          {/* Description */}
           <FormControl>
             <FormLabel>Description</FormLabel>
-            <Textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Add venue details, features, etc."
-              rows={4}
-            />
+            <Textarea name="description" value={form.description} onChange={handleChange} />
+          </FormControl>
+
+          {/* Contact Details */}
+          <FormControl>
+            <FormLabel>Contact Details (optional)</FormLabel>
+            <VStack spacing={3}>
+              <Input
+                name="contact.instagram"
+                value={form.contact.instagram}
+                onChange={handleChange}
+                placeholder="Instagram link"
+              />
+              <Input
+                name="contact.whatsapp"
+                value={form.contact.whatsapp}
+                onChange={handleChange}
+                placeholder="WhatsApp number or wa.me link"
+              />
+              <Input
+                name="contact.website"
+                value={form.contact.website}
+                onChange={handleChange}
+                placeholder="Website URL"
+              />
+            </VStack>
           </FormControl>
 
           {/* Amenities */}
@@ -210,23 +216,19 @@ export default function AddVenue() {
               <Input
                 value={amenityInput}
                 onChange={(e) => setAmenityInput(e.target.value)}
-                placeholder="e.g. Free WiFi"
               />
               <IconButton
                 icon={<AddIcon />}
-                colorScheme="green"
                 onClick={handleAddAmenity}
-                aria-label="Add Amenity"
+                aria-label="Add amenity"
               />
             </HStack>
 
-            <HStack spacing={2} wrap="wrap">
+            <HStack wrap="wrap">
               {amenities.map((a, i) => (
                 <Button
                   key={i}
                   size="sm"
-                  colorScheme="blue"
-                  variant="outline"
                   rightIcon={<CloseIcon />}
                   onClick={() => handleRemoveAmenity(a)}
                 >
@@ -236,50 +238,36 @@ export default function AddVenue() {
             </HStack>
           </FormControl>
 
-          {/* Image Upload */}
+          {/* Images */}
           <FormControl isRequired>
             <FormLabel>Upload Images</FormLabel>
             <Input type="file" multiple onChange={handleImageUpload} />
           </FormControl>
 
-          {/* Uploading Spinner */}
           {uploading && (
             <Box textAlign="center">
-              <Spinner size="lg" />
-              <Text mt={1}>Uploading images...</Text>
+              <Spinner />
+              <Text>Uploading...</Text>
             </Box>
           )}
 
-          {/* Preview Images */}
           {images.length > 0 && (
-            <SimpleGrid columns={[2, 3, 4]} spacing={3}>
-              {images.map((url, i) =>
-                url ? (
-                  <Image
-                    key={i}
-                    src={url}
-                    alt="Venue preview"
-                    rounded="md"
-                    objectFit="cover"
-                    height="110px"
-                  />
-                ) : (
-                  <Box key={i} bg="gray.200" height="110px" rounded="md" />
-                )
-              )}
+            <SimpleGrid columns={[2, 3]} spacing={3}>
+              {images.map((url, i) => (
+                <Image key={i} src={url} h="100px" objectFit="cover" rounded="md" />
+              ))}
             </SimpleGrid>
           )}
 
-          {/* Submit Button */}
           <Button
             colorScheme="blue"
             size="lg"
             onClick={handleSubmit}
             isLoading={saving}
-            loadingText="Saving..."
           >
             Add Venue
           </Button>
+
         </VStack>
       </Box>
     </Layout>

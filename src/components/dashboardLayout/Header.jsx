@@ -14,7 +14,7 @@ import {
   const Links = [
     { name: "Home", to: "/" },
     { name: "Venues", to: "/venues" },
-    { name: "Bookings", to: "/bookings" },
+    { name: "my venues", to: "/admin/my-venues" },
   ];
   
   function NavLink({ to, children }) {

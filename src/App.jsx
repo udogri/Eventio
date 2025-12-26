@@ -7,9 +7,9 @@ import VenueDetails from "./pages/VenueDetails";
 import Signup from "./pages/Signup";
 
 import Dashboard from "./pages/admin/Dashboard";
-import ManageVenues from "./pages/admin/ManageVenues";
 import CreateVenue from "./pages/admin/AddVenue";
 import AddVenue from "./pages/AddVenue";
+import MyVenues from "./pages/admin/myVenues";
 
 function App() {
   
@@ -25,7 +25,7 @@ function App() {
 
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/admin/add-venue" element={<AddVenue />} />
-            <Route path="/admin/venues" element={<ManageVenues />} />
+            <Route path="/admin/my-venues" element={<MyVenues />} />
 
             <Route
               path="*"
