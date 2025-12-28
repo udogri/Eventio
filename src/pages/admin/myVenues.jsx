@@ -23,9 +23,15 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from "@chakra-ui/react";
 import { AddIcon, CloseIcon } from "@chakra-ui/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   collection,
   query,
@@ -53,6 +59,16 @@ export default function MyVenues() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Delete state
+  const [deletingVenue, setDeletingVenue] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const cancelRef = useRef();
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -62,10 +78,7 @@ export default function MyVenues() {
   /* ================= FETCH ================= */
   const fetchMyVenues = async () => {
     try {
-      const q = query(
-        collection(db, "venues"),
-        where("ownerId", "==", user.uid)
-      );
+      const q = query(collection(db, "venues"), where("ownerId", "==", user.uid));
       const snapshot = await getDocs(q);
 
       setVenues(
@@ -94,11 +107,7 @@ export default function MyVenues() {
       capacity: venue.capacity || "",
       price: venue.price || "",
       description: venue.description || "",
-      contact: venue.contact || {
-        instagram: "",
-        whatsapp: "",
-        website: "",
-      },
+      contact: venue.contact || { instagram: "", whatsapp: "", website: "" },
     });
     setImages(venue.images || []);
     setAmenities(venue.amenities || []);
@@ -110,10 +119,7 @@ export default function MyVenues() {
 
     if (name.startsWith("contact.")) {
       const field = name.split(".")[1];
-      setForm((prev) => ({
-        ...prev,
-        contact: { ...prev.contact, [field]: value },
-      }));
+      setForm((prev) => ({ ...prev, contact: { ...prev.contact, [field]: value } }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -146,11 +152,7 @@ export default function MyVenues() {
 
   const handleUpdate = async () => {
     if (!form.name || !form.location || !form.price || images.length === 0) {
-      toast({
-        title: "Missing fields",
-        status: "error",
-        position: "top",
-      });
+      toast({ title: "Missing fields", status: "error", position: "top" });
       return;
     }
 
@@ -167,7 +169,6 @@ export default function MyVenues() {
       });
 
       toast({ title: "Venue updated", status: "success" });
-
       fetchMyVenues();
       onClose();
     } catch {
@@ -178,12 +179,24 @@ export default function MyVenues() {
   };
 
   /* ================= DELETE ================= */
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this venue?")) return;
+  const handleDelete = (venue) => {
+    setDeletingVenue(venue);
+    onDeleteOpen();
+  };
 
-    await deleteDoc(doc(db, "venues", id));
-    setVenues((prev) => prev.filter((v) => v.id !== id));
-    toast({ title: "Venue deleted", status: "success" });
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteDoc(doc(db, "venues", deletingVenue.id));
+      setVenues((prev) => prev.filter((v) => v.id !== deletingVenue.id));
+      toast({ title: "Venue deleted", status: "success" });
+    } catch {
+      toast({ title: "Delete failed", status: "error" });
+    } finally {
+      setDeleting(false);
+      onDeleteClose();
+      setDeletingVenue(null);
+    }
   };
 
   /* ================= UI ================= */
@@ -214,9 +227,7 @@ export default function MyVenues() {
                 />
                 <Box p={4}>
                   <Heading size="sm">{venue.name}</Heading>
-                  <Text fontWeight="bold">
-                    ₦{venue.price.toLocaleString()}
-                  </Text>
+                  <Text fontWeight="bold">₦{venue.price.toLocaleString()}</Text>
 
                   <HStack mt={3}>
                     <Button
@@ -231,7 +242,7 @@ export default function MyVenues() {
                       size="sm"
                       colorScheme="red"
                       w="full"
-                      onClick={() => handleDelete(venue.id)}
+                      onClick={() => handleDelete(venue)}
                     >
                       Delete
                     </Button>
@@ -278,7 +289,6 @@ export default function MyVenues() {
 
               {/* Images */}
               <Input type="file" multiple onChange={handleImageUpload} />
-
               {images.length > 0 && (
                 <SimpleGrid columns={3} spacing={2}>
                   {images.map((img, i) => (
@@ -297,7 +307,34 @@ export default function MyVenues() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* ================= DELETE CONFIRMATION ================= */}
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Venue
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure you want to delete "{deletingVenue?.name}"? This action cannot be undone.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3} isLoading={deleting}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Layout>
   );
 }
-

@@ -23,7 +23,7 @@ import { db } from "../firebase/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { FaWhatsapp, FaInstagram, FaGlobe } from "react-icons/fa";
+import { FaWhatsapp, FaInstagram, FaEnvelope } from "react-icons/fa";
 import Layout from "../components/dashboardLayout/Index";
 
 export default function VenueDetails() {
@@ -57,8 +57,7 @@ export default function VenueDetails() {
         } else {
           setVenue("not_found");
         }
-      } catch (error) {
-        console.error("Error fetching venue:", error);
+      } catch {
         setVenue("error");
       } finally {
         setLoading(false);
@@ -88,7 +87,6 @@ export default function VenueDetails() {
   return (
     <Layout>
       <Box maxW="900px" mx="auto" p={6}>
-
         {/* IMAGE CAROUSEL */}
         <Box
           position="relative"
@@ -135,9 +133,7 @@ export default function VenueDetails() {
         <HStack spacing={3} mb={4}>
           <Tag colorScheme="blue">{venue.location}</Tag>
           {venue.capacity && (
-            <Tag colorScheme="purple">
-              Capacity: {venue.capacity}
-            </Tag>
+            <Tag colorScheme="purple">Capacity: {venue.capacity}</Tag>
           )}
           {venue.venueType && (
             <Tag colorScheme="orange">{venue.venueType}</Tag>
@@ -160,12 +156,7 @@ export default function VenueDetails() {
         )}
 
         {/* CONTACT BUTTON */}
-        <Button
-          colorScheme="green"
-          size="lg"
-          w="full"
-          onClick={onOpen}
-        >
+        <Button colorScheme="green" size="lg" w="full" onClick={onOpen}>
           Contact Venue
         </Button>
 
@@ -178,7 +169,7 @@ export default function VenueDetails() {
 
             <ModalBody pb={6}>
               <VStack spacing={4}>
-
+                {/* WHATSAPP */}
                 {venue.contact?.whatsapp && (
                   <Button
                     leftIcon={<FaWhatsapp />}
@@ -188,7 +179,10 @@ export default function VenueDetails() {
                       window.open(
                         venue.contact.whatsapp.startsWith("http")
                           ? venue.contact.whatsapp
-                          : `https://wa.me/${venue.contact.whatsapp.replace(/\D/g, "")}?text=Hello, I'm interested in ${venue.name}`,
+                          : `https://wa.me/${venue.contact.whatsapp.replace(
+                              /\D/g,
+                              ""
+                            )}?text=Hello, I'm interested in ${venue.name}`,
                         "_blank"
                       )
                     }
@@ -197,6 +191,7 @@ export default function VenueDetails() {
                   </Button>
                 )}
 
+                {/* INSTAGRAM */}
                 {venue.contact?.instagram && (
                   <Button
                     leftIcon={<FaInstagram />}
@@ -210,22 +205,34 @@ export default function VenueDetails() {
                   </Button>
                 )}
 
-                {venue.contact?.website && (
-                  <Button
-                    leftIcon={<FaGlobe />}
-                    colorScheme="blue"
-                    w="full"
-                    onClick={() =>
-                      window.open(venue.contact.website, "_blank")
-                    }
-                  >
-                    Website
-                  </Button>
-                )}
+                {/* EMAIL */}
+                {venue.contact?.email && (
+  <Button
+    leftIcon={<FaEnvelope />}
+    colorScheme="blue"
+    w="full"
+    onClick={() =>
+      window.open(
+        `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+          venue.contact.email
+        )}&su=${encodeURIComponent(
+          `Enquiry about ${venue.name}`
+        )}&body=${encodeURIComponent(
+          `Hello,\n\nI am interested in ${venue.name}. Please share more details.\n\nThank you.`
+        )}`,
+        "_blank"
+      )
+    }
+  >
+    Email
+  </Button>
+)}
 
+
+                {/* FALLBACK */}
                 {!venue.contact?.whatsapp &&
                   !venue.contact?.instagram &&
-                  !venue.contact?.website && (
+                  !venue.contact?.email && (
                     <Text color="gray.500" textAlign="center">
                       No contact information available.
                     </Text>
@@ -234,7 +241,6 @@ export default function VenueDetails() {
             </ModalBody>
           </ModalContent>
         </Modal>
-
       </Box>
     </Layout>
   );

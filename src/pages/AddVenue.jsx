@@ -34,7 +34,7 @@ export default function AddVenue() {
     contact: {
       instagram: "",
       whatsapp: "",
-      website: "",
+      email: "",
     },
   });
 
@@ -143,7 +143,7 @@ export default function AddVenue() {
         contact: {
           instagram: "",
           whatsapp: "",
-          website: "",
+          email: "",
         },
       });
       setImages([]);
@@ -210,10 +210,11 @@ export default function AddVenue() {
                 placeholder="WhatsApp number or wa.me link"
               />
               <Input
-                name="contact.website"
-                value={form.contact.website}
+                name="contact.email"
+                type="email"
+                value={form.contact.email}
                 onChange={handleChange}
-                placeholder="Website URL"
+                placeholder="Email address"
               />
             </VStack>
           </FormControl>
