@@ -21,6 +21,8 @@ import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { uploadToImgBB } from "../utils/uploadToImgBB";
 import Layout from "../components/dashboardLayout/Index";
+import { getAuth } from "firebase/auth";
+
 
 export default function AddVenue() {
   const [form, setForm] = useState({
@@ -41,6 +43,9 @@ export default function AddVenue() {
   const [amenityInput, setAmenityInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   const toast = useToast();
 
@@ -107,7 +112,9 @@ export default function AddVenue() {
         title: "Missing fields",
         description: "Fill required fields and upload at least one image.",
         status: "error",
+        position: "top",
       });
+      
       return;
     }
 
@@ -120,10 +127,11 @@ export default function AddVenue() {
         price: Number(form.price),
         images,
         amenities,
+        ownerId: user.uid, // 👈 IMPORTANT
         createdAt: new Date(),
       });
 
-      toast({ title: "Venue added!", status: "success" });
+      toast({ title: "Venue added!", status: "success", position: "top", });
 
       // Reset
       setForm({
@@ -146,6 +154,7 @@ export default function AddVenue() {
       toast({
         title: "Error adding venue",
         status: "error",
+        position: "top",
       });
     }
 
