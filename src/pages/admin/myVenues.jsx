@@ -226,7 +226,9 @@ export default function MyVenues() {
                   bgPos="center"
                 />
                 <Box p={4}>
-                  <Heading size="sm">{venue.name}</Heading>
+                  <Heading size="sm" noOfLines={1}>
+                    {venue.name}
+                  </Heading>
                   <Text fontWeight="bold">₦{venue.price.toLocaleString()}</Text>
 
                   <HStack mt={3}>

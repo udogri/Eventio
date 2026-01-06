@@ -1,20 +1,57 @@
-import { Box, Heading, Text, Button, VStack } from "@chakra-ui/react";
+import { Box, Heading, Text, Button, VStack, Container } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
+import Layout from "../components/dashboardLayout/Index";
+import HeroImg from "../assets/HeroImg.jpg";
 
+export default function landingPage() {
+  return (
+    <Layout>
+      <Box
+        position="relative"           // ✅ REQUIRED
+        minH="calc(100vh - 64px)"     // ✅ account for header
+        bgImage={`url(${HeroImg})`}
+        bgSize="cover"
+        bgPosition="center"
+        bgRepeat="no-repeat"
+      >
+        {/* Dark overlay */}
+        <Box
+          position="absolute"
+          inset={0}
+          bg="blackAlpha.600"
+        />
 
-export function LandingPage() {
-    return (
-        <Box p={10} textAlign="center" bg="gray.50" minH="100vh">
-            <VStack spacing={6}>
-                <Heading fontSize="4xl">Find the Perfect Place for Your Event</Heading>
-                <Text maxW="600px">
-                    Discover event centers, sport arenas, parks, and all rental items you
-                    need for your next event.
-                </Text>
-                <Link to="/venues">
-                    <Button size="lg" colorScheme="blue">Get Started</Button>
-                </Link>
-            </VStack>
-        </Box>
-    );
+        <Container
+          maxW="container.md"
+          position="relative"
+          zIndex={1}
+          h="100%"
+        >
+          <VStack
+            spacing={8}
+            py={32}
+            textAlign="center"
+            color="white"
+            minH="100%"
+            justify="center"          // ✅ vertical centering
+          >
+            <Heading fontSize={{ base: "3xl", md: "5xl" }}>
+              Eventio
+            </Heading>
+
+            <Text fontSize={{ base: "md", md: "lg" }} color="gray.200">
+              Find and book event centers, halls, arenas, parks, studios, and rentals
+              in just a few clicks.
+            </Text>
+
+            <Link to="/venues">
+              <Button size="lg" colorScheme="blue">
+                Browse Venues
+              </Button>
+            </Link>
+          </VStack>
+        </Container>
+      </Box>
+    </Layout>
+  );
 }
